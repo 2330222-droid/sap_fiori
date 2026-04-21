@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SAP Fiori – Employee Directory</title>
+<style>
+/* =============================================
+   SAP FIORI HORIZON DESIGN TOKENS
+   ============================================= */
+:root {
+  --sap-blue:       #0070F2;
+  --sap-blue-dark:  #0057BB;
+  --sap-blue-light: #E8F3FF;
+  --sap-success:    #198344;
+  --sap-warning:    #E6600D;
+  --sap-error:      #BB0000;
+  --sap-bg:         #F5F6F7;
+  --sap-card-bg:    #FFFFFF;
+  --sap-border:     #D9DBDD;
+  --sap-text:       #1D2D3E;
+  --sap-text-muted: #556B82;
+  --sap-shell-bg:   #1B2A3B;
+  --shell-height:   44px;
+  --sidenav-width:  220px;
+  --radius:         8px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: Arial, 'Helvetica Neue', sans-serif;
+  background: var(--sap-bg);
+  color: var(--sap-text);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* ---- SHELL HEADER ---- */
+.fiori-shell-header {
+  position: fixed; top: 0; left: 0; right: 0;
+  height: var(--shell-height);
+  background: var(--sap-shell-bg);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 16px;
+  z-index: 1000;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+.shell-left, .shell-right { display: flex; align-items: center; gap: 12px; }
+.nav-btn {
+  background: none; border: none; color: #fff;
+  font-size: 20px; cursor: pointer; padding: 4px 8px;
+  border-radius: 4px; transition: background 0.2s;
+}
+.nav-btn:hover { background: rgba(255,255,255,0.15); }
+.sap-logo {
+  font-weight: 700; font-size: 14px; color: #fff;
+  background: var(--sap-blue); padding: 3px 7px; border-radius: 3px; letter-spacing: 1px;
+}
+.app-title { color: #fff; font-size: 15px; font-weight: 500; }
+.shell-icon-btn {
+  background: none; border: none; color: rgba(255,255,255,0.8);
+  font-size: 17px; cursor: pointer; padding: 6px;
+  border-radius: 50%; transition: background 0.2s;
+}
+.shell-icon-btn:hover { background: rgba(255,255,255,0.15); }
+.user-avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--sap-blue); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; cursor: pointer; user-select: none;
+}
+
+/* ---- SIDE NAVIGATION ---- */
+.side-nav {
+  position: fixed; top: var(--shell-height); left: 0; bottom: 0;
+  width: var(--sidenav-width); background: #fff;
+  border-right: 1px solid var(--sap-border);
+  z-index: 900; transition: transform 0.25s ease;
+}
+.side-nav.collapsed { transform: translateX(-100%); }
+.side-nav ul { list-style: none; padding: 8px 0; }
+.nav-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 20px; cursor: pointer;
+  color: var(--sap-text-muted); font-size: 14px;
+  border-left: 3px solid transparent;
+  transition: all 0.2s;
+}
+.nav-item:hover { background: var(--sap-blue-light); color: var(--sap-blue); }
+.nav-item.active {
+  background: var(--sap-blue-light); color: var(--sap-blue);
+  border-left-color: var(--sap-blue); font-weight: 600;
+}
+.nav-icon { font-size: 17px; }
+.nav-divider { height: 1px; background: var(--sap-border); margin: 8px 16px; }
+
+/* ---- MAIN CONTENT ---- */
+.main-content {
+  margin-top: var(--shell-height);
+  margin-left: var(--sidenav-width);
+  padding: 20px 24px;
+  min-height: calc(100vh - var(--shell-height));
+  transition: margin-left 0.25s ease;
+}
+.main-content.full-width { margin-left: 0; }
+
+/* ---- FILTER BAR ---- */
+.filter-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 12px;
+  margin-bottom: 20px;
+  background: #fff; border: 1px solid var(--sap-border);
+  border-radius: var(--radius); padding: 12px 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.filter-left { display: flex; align-items: baseline; gap: 12px; }
+.page-title { font-size: 18px; font-weight: 600; color: var(--sap-text); }
+.item-count {
+  font-size: 12px; color: var(--sap-text-muted);
+  background: var(--sap-bg); padding: 2px 10px; border-radius: 10px;
+}
+.filter-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.search-input {
+  border: 1px solid var(--sap-border); border-radius: 4px;
+  padding: 7px 12px; font-size: 14px; width: 220px; outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.search-input:focus { border-color: var(--sap-blue); box-shadow: 0 0 0 2px rgba(0,112,242,0.12); }
+.filter-select {
+  border: 1px solid var(--sap-border); border-radius: 4px;
+  padding: 7px 10px; font-size: 14px; background: #fff;
+  cursor: pointer; outline: none; transition: border-color 0.2s;
+}
+.filter-select:focus { border-color: var(--sap-blue); }
+.view-toggle { display: flex; border: 1px solid var(--sap-border); border-radius: 4px; overflow: hidden; }
+.view-btn {
+  border: none; background: #fff; padding: 7px 11px;
+  cursor: pointer; font-size: 15px; color: var(--sap-text-muted);
+  transition: all 0.2s;
+}
+.view-btn.active { background: var(--sap-blue-light); color: var(--sap-blue); }
+.view-btn:hover:not(.active) { background: var(--sap-bg); }
+
+/* ---- EMPLOYEE CARDS ---- */
+.employee-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+.emp-card {
+  background: var(--sap-card-bg); border: 1px solid var(--sap-border);
+  border-radius: var(--radius); padding: 20px 16px 16px;
+  cursor: pointer; transition: box-shadow 0.2s, transform 0.15s;
+  position: relative; overflow: hidden;
+}
+.emp-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0;
+  height: 4px; background: var(--accent, var(--sap-blue));
+}
+.emp-card:hover { box-shadow: 0 4px 18px rgba(0,112,242,0.18); transform: translateY(-2px); }
+.card-avatar {
+  width: 56px; height: 56px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; font-weight: 700; color: #fff;
+  margin: 0 auto 12px;
+}
+.card-name { text-align: center; font-size: 15px; font-weight: 600; margin-bottom: 3px; }
+.card-title { text-align: center; font-size: 12px; color: var(--sap-text-muted); margin-bottom: 10px; }
+.card-dept {
+  font-size: 11px; font-weight: 600;
+  background: var(--sap-blue-light); color: var(--sap-blue);
+  padding: 3px 12px; border-radius: 12px;
+  text-align: center; display: block; margin: 0 auto 14px; width: fit-content;
+}
+.card-meta { border-top: 1px solid var(--sap-border); padding-top: 10px; font-size: 12px; color: var(--sap-text-muted); }
+.card-meta-row {
+  display: flex; align-items: center; gap: 6px; padding: 2px 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.status-badge {
+  display: inline-block; font-size: 11px; font-weight: 600;
+  padding: 2px 8px; border-radius: 10px;
+}
+.status-active   { background: #E8F7EC; color: #198344; }
+.status-inactive { background: #FFF0E8; color: #C0392B; }
+.status-leave    { background: #FFF4E0; color: #B44F00; }
+
+/* ---- TABLE VIEW ---- */
+.employee-table-wrap {
+  background: #fff; border: 1px solid var(--sap-border);
+  border-radius: var(--radius); overflow-x: auto;
+}
+.fiori-table { width: 100%; border-collapse: collapse; }
+.fiori-table thead tr { background: var(--sap-bg); }
+.fiori-table th {
+  text-align: left; padding: 10px 16px;
+  font-size: 11px; font-weight: 700; color: var(--sap-text-muted);
+  border-bottom: 2px solid var(--sap-border);
+  text-transform: uppercase; letter-spacing: 0.6px;
+}
+.fiori-table td {
+  padding: 12px 16px; font-size: 13px;
+  border-bottom: 1px solid var(--sap-border); color: var(--sap-text);
+}
+.fiori-table tbody tr:hover { background: var(--sap-blue-light); cursor: pointer; }
+.fiori-table tbody tr:last-child td { border-bottom: none; }
+.table-avatar {
+  width: 30px; height: 30px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: #fff;
+  margin-right: 8px; vertical-align: middle;
+}
+
+/* ---- DIALOG ---- */
+.dialog-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+  z-index: 2000; display: flex; align-items: center; justify-content: center;
+}
+.dialog-overlay.hidden { display: none; }
+.dialog {
+  background: #fff; border-radius: var(--radius);
+  width: 500px; max-width: 95vw;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.22); overflow: hidden;
+}
+.dialog-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 20px; border-bottom: 1px solid var(--sap-border);
+  background: var(--sap-bg);
+}
+.dialog-header h3 { font-size: 16px; font-weight: 600; }
+.dialog-close {
+  background: none; border: none; font-size: 22px; cursor: pointer;
+  color: var(--sap-text-muted); width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; transition: background 0.2s;
+}
+.dialog-close:hover { background: var(--sap-border); }
+.dialog-body { padding: 20px; }
+.dialog-emp-header { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
+.dialog-avatar {
+  width: 72px; height: 72px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px; font-weight: 700; color: #fff; flex-shrink: 0;
+}
+.dialog-emp-name { font-size: 18px; font-weight: 700; margin-bottom: 3px; }
+.dialog-emp-sub { font-size: 13px; color: var(--sap-text-muted); }
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 4px; }
+.detail-item label {
+  font-size: 10px; font-weight: 700; color: var(--sap-text-muted);
+  text-transform: uppercase; letter-spacing: 0.6px;
+  display: block; margin-bottom: 3px;
+}
+.detail-item span { font-size: 13px; }
+.dialog-footer {
+  display: flex; justify-content: flex-end; gap: 10px;
+  padding: 12px 20px; border-top: 1px solid var(--sap-border);
+  background: var(--sap-bg);
+}
+
+/* ---- BUTTONS ---- */
+.btn {
+  border: none; padding: 8px 20px; border-radius: 4px;
+  font-size: 14px; font-weight: 500; cursor: pointer;
+  transition: background 0.2s; font-family: inherit;
+}
+.btn-primary { background: var(--sap-blue); color: #fff; }
+.btn-primary:hover { background: var(--sap-blue-dark); }
+.btn-secondary { background: transparent; color: var(--sap-text); border: 1px solid var(--sap-border); }
+.btn-secondary:hover { background: var(--sap-bg); }
+
+/* ---- EMPTY STATE ---- */
+.empty-state {
+  text-align: center; padding: 60px 20px; color: var(--sap-text-muted);
+}
+.empty-state-icon { font-size: 48px; margin-bottom: 12px; }
+.empty-state h3 { font-size: 16px; color: var(--sap-text); margin-bottom: 6px; }
+
+/* ---- TOAST ---- */
+.toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+  background: #1D2D3E; color: #fff; padding: 10px 20px; border-radius: 6px;
+  font-size: 13px; z-index: 3000; opacity: 0; transition: opacity 0.3s;
+  pointer-events: none;
+}
+.toast.show { opacity: 1; }
+
+/* ---- UTILITIES ---- */
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<!-- SHELL HEADER -->
+<header class="fiori-shell-header">
+  <div class="shell-left">
+    <button class="nav-btn" id="menuBtn" title="Toggle Navigation">&#9776;</button>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span class="sap-logo">SAP</span>
+      <span class="app-title">Employee Directory</span>
+    </div>
+  </div>
+  <div class="shell-right">
+    <button class="shell-icon-btn" title="Search">&#128269;</button>
+    <button class="shell-icon-btn" title="Notifications">&#128276;</button>
+    <button class="shell-icon-btn" title="Settings">&#9881;</button>
+    <div class="user-avatar" title="John Doe">JD</div>
+  </div>
+</header>
+
+<!-- SIDE NAVIGATION -->
+<nav class="side-nav" id="sideNav">
+  <ul>
+    <li class="nav-item active" data-page="directory">
+      <span class="nav-icon">&#128100;</span>
+      <span>Employees</span>
+    </li>
+    <li class="nav-item" data-page="departments">
+      <span class="nav-icon">&#127970;</span>
+      <span>Departments</span>
+    </li>
+    <li class="nav-item" data-page="reports">
+      <span class="nav-icon">&#128202;</span>
+      <span>Reports</span>
+    </li>
+    <div class="nav-divider"></div>
+    <li class="nav-item" data-page="settings">
+      <span class="nav-icon">&#9881;</span>
+      <span>Settings</span>
+    </li>
+  </ul>
+</nav>
+
+<!-- MAIN CONTENT -->
+<main class="main-content" id="mainContent">
+
+  <!-- FILTER BAR -->
+  <div class="filter-bar">
+    <div class="filter-left">
+      <h2 class="page-title">Employee Directory</h2>
+      <span class="item-count" id="itemCount">0 employees</span>
+    </div>
+    <div class="filter-right">
+      <input type="text" class="search-input" id="searchInput" placeholder="&#128269; Search by name, title, email..."/>
+      <select class="filter-select" id="deptFilter">
+        <option value="">All Departments</option>
+        <option value="Engineering">Engineering</option>
+        <option value="Sales">Sales</option>
+        <option value="HR">HR</option>
+        <option value="Finance">Finance</option>
+        <option value="Marketing">Marketing</option>
+      </select>
+      <select class="filter-select" id="statusFilter">
+        <option value="">All Status</option>
+        <option value="Active">Active</option>
+        <option value="Inactive">Inactive</option>
+        <option value="On Leave">On Leave</option>
+      </select>
+      <div class="view-toggle">
+        <button class="view-btn active" id="cardViewBtn" title="Card View">&#9635;</button>
+        <button class="view-btn" id="listViewBtn" title="List View">&#9776;</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CARD VIEW -->
+  <div class="employee-grid" id="employeeGrid"></div>
+
+  <!-- TABLE VIEW -->
+  <div class="employee-table-wrap hidden" id="employeeTable">
+    <table class="fiori-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Job Title</th>
+          <th>Department</th>
+          <th>Email</th>
+          <th>Phone</th>
+          <th>Location</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+
+</main>
+
+<!-- EMPLOYEE DETAIL DIALOG -->
+<div class="dialog-overlay hidden" id="dialogOverlay">
+  <div class="dialog">
+    <div class="dialog-header">
+      <h3 id="dialogTitle">Employee Details</h3>
+      <button class="dialog-close" id="dialogClose" title="Close">&times;</button>
+    </div>
+    <div class="dialog-body" id="dialogBody"></div>
+    <div class="dialog-footer">
+      <button class="btn btn-primary" id="emailBtn">&#9993; Send Email</button>
+      <button class="btn btn-secondary" id="closeBtn">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST NOTIFICATION -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* =============================================
+   SAP FIORI EMPLOYEE DIRECTORY — app.js
+   ============================================= */
+
+// ── EMPLOYEE DATA ────────────────────────────
+const employees = [
+  { id:1,  name:"Arjun Sharma",   title:"Senior Developer",    dept:"Engineering", email:"a.sharma@corp.com",  phone:"+91 98765 43210", location:"Bangalore", status:"Active",   joined:"Jan 2020", manager:"Rajesh Kumar" },
+  { id:2,  name:"Priya Mehta",    title:"UX Designer",         dept:"Marketing",   email:"p.mehta@corp.com",   phone:"+91 87654 32109", location:"Mumbai",    status:"Active",   joined:"Mar 2019", manager:"Anil Verma" },
+  { id:3,  name:"Rahul Gupta",    title:"Sales Manager",       dept:"Sales",       email:"r.gupta@corp.com",   phone:"+91 76543 21098", location:"Delhi",     status:"Active",   joined:"Jun 2018", manager:"Sunita Roy" },
+  { id:4,  name:"Sneha Patel",    title:"HR Business Partner", dept:"HR",          email:"s.patel@corp.com",   phone:"+91 65432 10987", location:"Pune",      status:"On Leave", joined:"Feb 2021", manager:"Geeta Iyer" },
+  { id:5,  name:"Vikram Nair",    title:"Finance Analyst",     dept:"Finance",     email:"v.nair@corp.com",    phone:"+91 54321 09876", location:"Chennai",   status:"Active",   joined:"Aug 2017", manager:"Mohan Das" },
+  { id:6,  name:"Anita Desai",    title:"Full Stack Engineer", dept:"Engineering", email:"a.desai@corp.com",   phone:"+91 43210 98765", location:"Hyderabad", status:"Active",   joined:"Nov 2022", manager:"Rajesh Kumar" },
+  { id:7,  name:"Kabir Khan",     title:"Business Analyst",    dept:"Finance",     email:"k.khan@corp.com",    phone:"+91 32109 87654", location:"Kolkata",   status:"Inactive", joined:"May 2016", manager:"Mohan Das" },
+  { id:8,  name:"Divya Reddy",    title:"Marketing Lead",      dept:"Marketing",   email:"d.reddy@corp.com",   phone:"+91 21098 76543", location:"Bangalore", status:"Active",   joined:"Sep 2020", manager:"Anil Verma" },
+  { id:9,  name:"Suresh Menon",   title:"DevOps Engineer",     dept:"Engineering", email:"s.menon@corp.com",   phone:"+91 10987 65432", location:"Pune",      status:"Active",   joined:"Jul 2019", manager:"Rajesh Kumar" },
+  { id:10, name:"Kavita Singh",   title:"Talent Acquisition",  dept:"HR",          email:"k.singh@corp.com",   phone:"+91 99876 54321", location:"Delhi",     status:"Active",   joined:"Jan 2023", manager:"Geeta Iyer" },
+  { id:11, name:"Manish Joshi",   title:"Account Executive",   dept:"Sales",       email:"m.joshi@corp.com",   phone:"+91 88765 43210", location:"Mumbai",    status:"Active",   joined:"Mar 2022", manager:"Sunita Roy" },
+  { id:12, name:"Pooja Bhatia",   title:"SAP ABAP Developer",  dept:"Engineering", email:"p.bhatia@corp.com",  phone:"+91 77654 32109", location:"Noida",     status:"On Leave", joined:"Oct 2021", manager:"Rajesh Kumar" },
+  { id:13, name:"Deepak Tiwari",  title:"Scrum Master",        dept:"Engineering", email:"d.tiwari@corp.com",  phone:"+91 66543 21098", location:"Bangalore", status:"Active",   joined:"Apr 2021", manager:"Rajesh Kumar" },
+  { id:14, name:"Ritu Sharma",    title:"Content Strategist",  dept:"Marketing",   email:"r.sharma@corp.com",  phone:"+91 55432 10987", location:"Mumbai",    status:"Active",   joined:"Aug 2022", manager:"Anil Verma" },
+  { id:15, name:"Ajay Kapoor",    title:"Regional Sales Head", dept:"Sales",       email:"a.kapoor@corp.com",  phone:"+91 44321 09876", location:"Delhi",     status:"Active",   joined:"Dec 2015", manager:"Sunita Roy" },
+];
+
+// Department color palette (SAP Fiori Horizon)
+const deptColors = {
+  Engineering: "#0070F2",
+  Marketing:   "#6A1B9A",
+  Sales:       "#198344",
+  HR:          "#E6600D",
+  Finance:     "#8B1D1D",
+};
+
+// ── HELPERS ───────────────────────────────────
+function initials(name) {
+  return name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase();
+}
+function statusCls(s) {
+  if (s === "Active")   return "status-active";
+  if (s === "Inactive") return "status-inactive";
+  return "status-leave";
+}
+function color(dept) { return deptColors[dept] || "#0070F2"; }
+
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 2500);
+}
+
+// ── RENDER CARDS ─────────────────────────────
+function renderCards(data) {
+  const grid = document.getElementById("employeeGrid");
+  if (!data.length) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
+      <div class="empty-state-icon">&#128269;</div>
+      <h3>No employees found</h3>
+      <p>Try adjusting your search or filters.</p>
+    </div>`;
+    return;
+  }
+  grid.innerHTML = "";
+  data.forEach(emp => {
+    const c = color(emp.dept);
+    const div = document.createElement("div");
+    div.className = "emp-card";
+    div.style.setProperty("--accent", c);
+    div.innerHTML = `
+      <div class="card-avatar" style="background:${c}">${initials(emp.name)}</div>
+      <div class="card-name">${emp.name}</div>
+      <div class="card-title">${emp.title}</div>
+      <span class="card-dept">${emp.dept}</span>
+      <div class="card-meta">
+        <div class="card-meta-row">&#9993; ${emp.email}</div>
+        <div class="card-meta-row">&#128222; ${emp.phone}</div>
+        <div class="card-meta-row" style="justify-content:space-between;margin-top:6px;">
+          <span>&#128205; ${emp.location}</span>
+          <span class="status-badge ${statusCls(emp.status)}">${emp.status}</span>
+        </div>
+      </div>`;
+    div.addEventListener("click", () => openDialog(emp));
+    grid.appendChild(div);
+  });
+}
+
+// ── RENDER TABLE ──────────────────────────────
+function renderTable(data) {
+  const tbody = document.getElementById("tableBody");
+  if (!data.length) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--sap-text-muted);">No employees found</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = "";
+  data.forEach(emp => {
+    const c = color(emp.dept);
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><span class="table-avatar" style="background:${c}">${initials(emp.name)}</span>${emp.name}</td>
+      <td>${emp.title}</td>
+      <td><span style="background:${c}20;color:${c};font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;">${emp.dept}</span></td>
+      <td style="color:var(--sap-blue)">${emp.email}</td>
+      <td>${emp.phone}</td>
+      <td>${emp.location}</td>
+      <td><span class="status-badge ${statusCls(emp.status)}">${emp.status}</span></td>`;
+    tr.addEventListener("click", () => openDialog(emp));
+    tbody.appendChild(tr);
+  });
+}
+
+// ── DIALOG ───────────────────────────────────
+let currentEmp = null;
+function openDialog(emp) {
+  currentEmp = emp;
+  const c = color(emp.dept);
+  document.getElementById("dialogTitle").textContent = emp.name;
+  document.getElementById("dialogBody").innerHTML = `
+    <div class="dialog-emp-header">
+      <div class="dialog-avatar" style="background:${c}">${initials(emp.name)}</div>
+      <div>
+        <div class="dialog-emp-name">${emp.name}</div>
+        <div class="dialog-emp-sub">${emp.title} &bull; ${emp.dept}</div>
+        <span class="status-badge ${statusCls(emp.status)}" style="margin-top:8px;display:inline-block">${emp.status}</span>
+      </div>
+    </div>
+    <div class="detail-grid">
+      <div class="detail-item"><label>Employee ID</label><span>EMP-${String(emp.id).padStart(4,"0")}</span></div>
+      <div class="detail-item"><label>Department</label><span>${emp.dept}</span></div>
+      <div class="detail-item"><label>Email</label><span style="color:var(--sap-blue)">${emp.email}</span></div>
+      <div class="detail-item"><label>Phone</label><span>${emp.phone}</span></div>
+      <div class="detail-item"><label>Location</label><span>${emp.location}</span></div>
+      <div class="detail-item"><label>Joined</label><span>${emp.joined}</span></div>
+      <div class="detail-item"><label>Reporting Manager</label><span>${emp.manager}</span></div>
+      <div class="detail-item"><label>Status</label><span>${emp.status}</span></div>
+    </div>`;
+  document.getElementById("dialogOverlay").classList.remove("hidden");
+}
+function closeDialog() {
+  document.getElementById("dialogOverlay").classList.add("hidden");
+  currentEmp = null;
+}
+
+// ── FILTER + REFRESH ─────────────────────────
+function getFiltered() {
+  const q    = document.getElementById("searchInput").value.toLowerCase();
+  const dept = document.getElementById("deptFilter").value;
+  const stat = document.getElementById("statusFilter").value;
+  return employees.filter(e => {
+    const matchQ = !q || e.name.toLowerCase().includes(q) ||
+                         e.title.toLowerCase().includes(q) ||
+                         e.email.toLowerCase().includes(q) ||
+                         e.location.toLowerCase().includes(q);
+    const matchD = !dept || e.dept === dept;
+    const matchS = !stat || e.status === stat;
+    return matchQ && matchD && matchS;
+  });
+}
+function refresh() {
+  const data = getFiltered();
+  document.getElementById("itemCount").textContent = `${data.length} employee${data.length!==1?"s":""}`;
+  const isCard = !document.getElementById("employeeGrid").classList.contains("hidden");
+  if (isCard) renderCards(data);
+  else renderTable(data);
+}
+
+// ── VIEW TOGGLE ───────────────────────────────
+document.getElementById("cardViewBtn").addEventListener("click", () => {
+  document.getElementById("cardViewBtn").classList.add("active");
+  document.getElementById("listViewBtn").classList.remove("active");
+  document.getElementById("employeeGrid").classList.remove("hidden");
+  document.getElementById("employeeTable").classList.add("hidden");
+  refresh();
+});
+document.getElementById("listViewBtn").addEventListener("click", () => {
+  document.getElementById("listViewBtn").classList.add("active");
+  document.getElementById("cardViewBtn").classList.remove("active");
+  document.getElementById("employeeGrid").classList.add("hidden");
+  document.getElementById("employeeTable").classList.remove("hidden");
+  refresh();
+});
+
+// ── NAV TOGGLE ────────────────────────────────
+document.getElementById("menuBtn").addEventListener("click", () => {
+  document.getElementById("sideNav").classList.toggle("collapsed");
+  document.getElementById("mainContent").classList.toggle("full-width");
+});
+document.querySelectorAll(".nav-item").forEach(item => {
+  item.addEventListener("click", () => {
+    document.querySelectorAll(".nav-item").forEach(i => i.classList.remove("active"));
+    item.classList.add("active");
+  });
+});
+
+// ── DIALOG EVENTS ─────────────────────────────
+document.getElementById("dialogClose").addEventListener("click", closeDialog);
+document.getElementById("closeBtn").addEventListener("click", closeDialog);
+document.getElementById("dialogOverlay").addEventListener("click", e => {
+  if (e.target.id === "dialogOverlay") closeDialog();
+});
+document.getElementById("emailBtn").addEventListener("click", () => {
+  if (currentEmp) {
+    showToast("Email sent to " + currentEmp.email);
+    closeDialog();
+  }
+});
+
+// ── KEYBOARD SHORTCUT ─────────────────────────
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") closeDialog();
+});
+
+// ── FILTER EVENTS ─────────────────────────────
+document.getElementById("searchInput").addEventListener("input", refresh);
+document.getElementById("deptFilter").addEventListener("change", refresh);
+document.getElementById("statusFilter").addEventListener("change", refresh);
+
+// ── INIT ──────────────────────────────────────
+refresh();
+</script>
+</body>
+</html>
